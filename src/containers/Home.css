@@ -1,0 +1,19 @@
+@media all and (min-width: 480px) {
+  .FormInfo {
+    padding: 60px 0;
+  }
+
+  .FormInfo form {
+    margin: 0 auto;
+    max-width: 320px;
+  }
+}
+
+.Company-List {
+    max-height: 250px;
+    overflow-y:scroll;
+}
+
+.Company-List-Element {
+    text-align: left;
+}
