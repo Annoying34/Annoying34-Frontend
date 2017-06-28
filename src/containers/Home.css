@@ -1,19 +1,37 @@
-@media all and (min-width: 480px) {
-  .FormInfo {
-    padding: 60px 0;
-  }
-
-  .FormInfo form {
-    margin: 0 auto;
-    max-width: 320px;
-  }
+.FormInfo {
+	margin: auto;
+    width: 75%;
+	padding: 60px 0;
 }
 
-.Company-List {
-    max-height: 250px;
-    overflow-y:scroll;
+.EmailSearch {
+	margin: 30px;
+}
+
+.EmailInput {
+	margin-bottom: 10px;
+}
+
+.PasswordInput {
+	margin-bottom: 10px;
+}
+
+# company List
+
+.CompanyList {
+	max-height: 250px;
+	overflow-y:scroll;
+}
+
+.CompanyIcon {
+	height: 18px;
+	width: auto;
 }
 
 .Company-List-Element {
-    text-align: left;
+	text-align: left;
+}
+
+.DescriptionLabel {
+	text-align: left;
 }

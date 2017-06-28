@@ -2,19 +2,24 @@
     "companies": [
         {
             "name": "ebay",
-            "email": "impressum@ebay.de"
+            "email": "impressum@ebay.de",
+			"icon": "https://github.com/fluidicon.png"
         },{
             "name": "amazon",
-            "email": "impressum@amazon.de"
+            "email": "impressum@amazon.de",
+			"icon": "https://assets-cdn.github.com/favicon.ico"
         },{
             "name": "apple",
-            "email": "contactus.de@euro.apple.com"
+            "email": "contactus.de@euro.apple.com",
+			"icon": "https://assets-cdn.github.com/favicon.ico"
         },{
             "name": "DHL",
-            "email": "impressum.paket@dhl.com"
+            "email": "impressum.paket@dhl.com",
+			"icon": "https://assets-cdn.github.com/favicon.ico"
         },{
             "name": "DKV",
-            "email": "service@dkv.com"
+            "email": "service@dkv.com",
+			"icon": "https://assets-cdn.github.com/favicon.ico"
         }
     ]
 }

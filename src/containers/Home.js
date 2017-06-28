@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { HelpBlock, Badge, Glyphicon, Image } from 'react-bootstrap';
 import './Home.css';
 
 var companiesJson = require('../../public/companies.json');
@@ -19,21 +20,50 @@ class Home extends Component {
 
     	this.state = {
       		email: '',
+			password: '',
       		name: '',
 			forename: '',
-            companies: companiesJson
+			showCompanies: false,
+            companies: companiesJson,
+			texts: {
+				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen die du anschreiben möchtest oder wir suchen in deinen E-Mails nach Firmen und du kannst diese dann durchsuchen.\nWenn wir für dich nach Firmen suchen sollen brauchen wir deine E-Mail Adresse und passwort.\nWir werden dabei nur nach Metadaten in deinen Emails suchen, die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über ihren Email Provider zu senden."
+			}
     	};
   	}
-
-	validateForm() {
+	
+	// Companies Email
+	
+	validateEmailLogin() {
+		
 		var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
+		
 		return 	this.state.email.length > 0 &&
-				this.state.name.length > 0 &&
-				this.state.forename.length > 0 &&
+				this.state.password.length > 0 &&
                 re.test(this.state.email)
-  	}
-
+	}
+	
+	fetchCompanies = (event) => {
+		// TODO
+	}
+	
+	showCompanies = (event) => {
+		fetch('https://uinames.com/api/', {
+  			method: 'POST',
+  			headers: {
+    			'Accept': 'application/json',
+    			'Content-Type': 'application/json',
+  			}, body: JSON.stringify({
+    			email: '',
+    			password: '',
+  			})
+		})
+		.then((response) => response.json())
+		.then((responseJson) => {
+			console.log(responseJson);
+			this.setState({showCompanies: true})
+		});
+	}
+	
 	handleChange = (event) => {
 		this.setState({
 			[event.target.id]: event.target.value
@@ -50,6 +80,7 @@ class Home extends Component {
     }
 
 	onItemSelect = (company, event) => {
+		
 		company.active = !company.active;
 		this.setState({renderedAt: event.target.id})
     }
@@ -62,19 +93,16 @@ class Home extends Component {
 		}).join(',');
 	}
 
-	subject() {
-		return "Antrag auf Auskunftserteilung nach § 34 Bundesdatenschutzgesetz"
-	}
-
-	text() {
-		return `Sehr geehrte Damen und Herren,\n\nbitte erteilen Sie mir gemäß § 34 Bundesdatenschutzgesetz Auskunft über die zu meiner Person bei Ihnen gespeicherten Daten, den Zweck der Speicherung, die Herkunft der Daten und die empfangenden Stellen oder Kategorien von empfangenden Stellen, an die Daten weitergegeben wurden.\n\nSollten Sie weitere Angaben zum Nachweis meiner Identität benötigen, stehe ich Ihnen für Rückfragen zur Verfügung.\n\n Mit freundlichen Grüßen\n${this.state.forename} ${this.state.name}`
-	}
-
     rows = () => {
         var rows = [];
         this.state.companies.companies.forEach(function (company, i) {
             rows.push(
-                <ListGroupItem active={company.active} key={i.toString()} onClick={this.onItemSelect.bind(this, company)} className="Company-List-Element">{company.name}</ListGroupItem>
+                <ListGroupItem 
+					key={i.toString()} 
+					onClick={this.onItemSelect.bind(this, company)}
+					className="Company-List-Element">
+						<Image className="CompanyIcon" src={company.icon} /> {company.name} {company.active && <Badge><Glyphicon glyph="ok"/></Badge>}
+				</ListGroupItem>
             );
         }, this);
         return rows;
@@ -83,7 +111,39 @@ class Home extends Component {
 	render() {
    		return (
    			<div className="FormInfo">
-   			  <form onSubmit={this.handleSubmit}>
+				<FormGroup className="Login" bsSize="large">
+					<HelpBlock className="DescriptionLabel">{this.state.texts.startDescription}</HelpBlock>
+				</FormGroup>
+				<FormGroup className="EmailSearch" bsSize="large">
+					<FormGroup controlId="email" bsSize="large">
+						<ControlLabel> E-Mail </ControlLabel>
+						<FormControl className="EmailInput" type="text" value={this.state.email} onChange={this.handleChange} />
+					</FormGroup>
+					<FormGroup controlId="password" bsSize="large">
+						<ControlLabel> Passwort </ControlLabel>
+						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
+					</FormGroup>
+					<Button block onClick={	this.fetchCompanies } disabled={ ! this.validateEmailLogin() } bsSize="large" type="submit"> Emails durchsuchen </Button>
+					<Button block onClick={	this.showCompanies } bsSize="large" type="submit"> Manuell druchsuchen </Button>
+				</FormGroup>
+				{ this.state.showCompanies && 
+					<div className="CompanyList">
+						<FormGroup controlId="company" bsSize="large">
+							<ControlLabel>Companies</ControlLabel>
+                    		<ListGroup className="Company-List">
+                        		{this.rows()}
+                    		</ListGroup>
+						</FormGroup>
+					</div>
+				}
+			</div>
+		);
+  	}
+}
+
+export default Home;
+
+   			  /*<form onSubmit={this.handleSubmit}>
    			    <FormGroup controlId="forename" bsSize="large">
    			      <ControlLabel>First Name</ControlLabel>
    			      <FormControl
@@ -121,9 +181,5 @@ class Home extends Component {
    			      	send email
    			    </Button>
    			  </form>
-   			</div>
-   		);
-  }
-}
+   			</div>*/
 
-export default Home;
