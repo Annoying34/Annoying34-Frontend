@@ -43,19 +43,25 @@ class Home extends Component {
 	}
 	
 	fetchCompanies = (event) => {
-		// TODO
-	}
-	
-	showCompanies = (event) => {
-		fetch('https://uinames.com/api/', {
+		fetch('http://annoying34.konstantindeichmann.de/companies', {
   			method: 'POST',
   			headers: {
-    			'Accept': 'application/json',
     			'Content-Type': 'application/json',
   			}, body: JSON.stringify({
     			email: '',
     			password: '',
   			})
+		})
+		.then((response) => response.json())
+		.then((responseJson) => {
+			console.log(responseJson);
+			this.setState({showCompanies: true})
+		});
+	}
+	
+	showCompanies = (event) => {
+		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
+  			method: 'GET'
 		})
 		.then((response) => response.json())
 		.then((responseJson) => {
