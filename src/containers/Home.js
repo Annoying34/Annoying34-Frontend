@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import { HelpBlock, Badge, Glyphicon, Image } from 'react-bootstrap';
 import './Home.css';
 
-var companiesJson = require('../../public/companies.json');
-
 import {
   	Button,
   	FormGroup,
