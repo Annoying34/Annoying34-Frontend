@@ -23,8 +23,9 @@ class Home extends Component {
 			password: '',
       		name: '',
 			forename: '',
+			isLoading: false,
 			showCompanies: false,
-            companies: companiesJson,
+            companies: {},
 			texts: {
 				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen die du anschreiben möchtest oder wir suchen in deinen E-Mails nach Firmen und du kannst diese dann durchsuchen.\nWenn wir für dich nach Firmen suchen sollen brauchen wir deine E-Mail Adresse und passwort.\nWir werden dabei nur nach Metadaten in deinen Emails suchen, die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über ihren Email Provider zu senden."
 			}
@@ -43,30 +44,28 @@ class Home extends Component {
 	}
 	
 	fetchCompanies = (event) => {
-		fetch('http://annoying34.konstantindeichmann.de/companies', {
-  			method: 'POST',
+		this.setState({isLoading: true})
+		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
+  			method: 'GET',
   			headers: {
     			'Content-Type': 'application/json',
-  			}, body: JSON.stringify({
-    			email: '',
-    			password: '',
-  			})
-		})
-		.then((response) => response.json())
-		.then((responseJson) => {
-			console.log(responseJson);
-			this.setState({showCompanies: true})
-		});
+				'email': this.state.email,
+				'password': this.state.password,
+  			}})
+			.then((response) => response.json())
+			.then((responseJson) => {
+				this.setState({showCompanies: true, companies: responseJson, isLoading: false})
+			});
 	}
 	
 	showCompanies = (event) => {
+		this.setState({isLoading: true})
 		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
   			method: 'GET'
 		})
 		.then((response) => response.json())
 		.then((responseJson) => {
-			console.log(responseJson);
-			this.setState({showCompanies: true})
+			this.setState({showCompanies: true, companies: responseJson, isLoading: false})
 		});
 	}
 	
@@ -87,7 +86,7 @@ class Home extends Component {
 
 	onItemSelect = (company, event) => {
 		
-		company.active = !company.active;
+		company.selected = !company.selected;
 		this.setState({renderedAt: event.target.id})
     }
 
@@ -101,13 +100,13 @@ class Home extends Component {
 
     rows = () => {
         var rows = [];
-        this.state.companies.companies.forEach(function (company, i) {
+        this.state.companies.forEach(function (company, i) {
             rows.push(
                 <ListGroupItem 
 					key={i.toString()} 
 					onClick={this.onItemSelect.bind(this, company)}
 					className="Company-List-Element">
-						<Image className="CompanyIcon" src={company.icon} /> {company.name} {company.active && <Badge><Glyphicon glyph="ok"/></Badge>}
+						{ company.imageURL && <Image className="CompanyIcon" src={company.imageURL} />} {company.name} {company.selected && <Badge><Glyphicon glyph="ok"/></Badge>}
 				</ListGroupItem>
             );
         }, this);
@@ -129,8 +128,8 @@ class Home extends Component {
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-					<Button block onClick={	this.fetchCompanies } disabled={ ! this.validateEmailLogin() } bsSize="large" type="submit"> Emails durchsuchen </Button>
-					<Button block onClick={	this.showCompanies } bsSize="large" type="submit"> Manuell druchsuchen </Button>
+					<Button block onClick={	this.fetchCompanies } disabled={ !this.validateEmailLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Emails durchsuchen'} </Button>
+					<Button block onClick={	this.showCompanies } disabled={this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Manuell durchsuchen'} </Button>
 				</FormGroup>
 				{ this.state.showCompanies && 
 					<div className="CompanyList">
@@ -148,44 +147,3 @@ class Home extends Component {
 }
 
 export default Home;
-
-   			  /*<form onSubmit={this.handleSubmit}>
-   			    <FormGroup controlId="forename" bsSize="large">
-   			      <ControlLabel>First Name</ControlLabel>
-   			      <FormControl
-   			        autoFocus
-   			        type="text"
-   			        value={this.state.forename}
-   			        onChange={this.handleChange} />
-   			    </FormGroup>
-   			    <FormGroup controlId="name" bsSize="large">
-   			      <ControlLabel>Last Name</ControlLabel>
-   			      <FormControl
-   			        type="text"
-   			        value={this.state.name}
-   			        onChange={this.handleChange} />
-   			    </FormGroup>
-				<FormGroup controlId="email" bsSize="large">
-   			      <ControlLabel>E-Mail</ControlLabel>
-   			      <FormControl
-   			        type="email"
-   			        value={this.state.email}
-   			        onChange={this.handleChange} />
-   			    </FormGroup>
-				<FormGroup controlId="company" bsSize="large">
-					<ControlLabel>Companies</ControlLabel>
-                    <ListGroup className="Company-List">
-                        {this.rows()}
-                    </ListGroup>
-				</FormGroup>
-   			    <Button
-   			      block
-                  onClick={this.onClick}
-   			      bsSize="large"
-   			      disabled={ ! this.validateForm() }
-   			      type="submit">
-   			      	send email
-   			    </Button>
-   			  </form>
-   			</div>*/
-
