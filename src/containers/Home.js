@@ -25,12 +25,13 @@ class Home extends Component {
 			showCompanies: false,
             companies: {},
 			texts: {
-				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst diese dann durchsuchen.\nWenn wir für dich nach Firmen suchen sollen brauchen wir deine E-Mail Adresse und Passwort.\nWir werden dabei nur nach Metadaten in deinen Emails suchen, die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen Email Provider zu senden."
+				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst diese dann durchsuchen.\nWenn wir für dich nach Firmen suchen sollen brauchen wir deine E-Mail Adresse und Passwort.\nWir werden dabei nur nach Metadaten in deinen Emails suchen, die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen Email Provider zu senden.",
+				proceedDescription: "Wenn du zu den ausgewählten Firmen eine Anfrage senden möchtest, können wir dies über den auf deinem Computer installierten E-Mail-Client tun. Oder wir senden die Emails direkt über deinen E-Mail Provider. In jedem Fall erhälst du nochmal eine Kopie des schreibens."
 			}
     	};
   	}
 	
-	// Companies Email
+	// Validate Emails
 	
 	validateEmailLogin() {
 		
@@ -40,6 +41,8 @@ class Home extends Component {
 				this.state.password.length > 0 &&
                 re.test(this.state.email)
 	}
+	
+	// Fetch Companies
 	
 	fetchCompanies = (event) => {
 		this.setState({isLoading: true})
@@ -67,6 +70,33 @@ class Home extends Component {
 		});
 	}
 	
+	// Post Companies
+	
+	sendCompanies = (event) => {
+		this.setState({isLoading: true})
+		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
+  			method: 'POST',
+  			headers: {
+    			'Content-Type': 'application/json',
+				'email': this.state.email,
+				'password': this.state.password,
+  			},
+			body: JSON.stringify(this.selectedCompanies())
+		})
+		.then((response) => response.json())
+		.then((responseJson) => {
+			console.log(responseJson)
+			this.setState({isLoading: false})
+		});
+	}
+	
+	openEmailClient = (event) => {
+		var mailto = `mailto:${this.state.email}?bcc=${encodeURIComponent(this.selectedEmailAdresses().join(','))}&subject=${encodeURIComponent("dummy Subject")}&body=${encodeURIComponent("dummy Text")}`;
+		window.location.href = mailto;
+	}
+	
+	// Handle I/O Events
+	
 	handleChange = (event) => {
 		this.setState({
 			[event.target.id]: event.target.value
@@ -76,25 +106,34 @@ class Home extends Component {
 	handleSubmit = (event) => {
 		event.preventDefault();
 	}
-
-    onClick = (event) => {
-		var mailto = `mailto:${this.state.email}?bcc=${encodeURIComponent(this.bcc())}&subject=${encodeURIComponent(this.subject())}&body=${encodeURIComponent(this.text())}`;
-        window.location.href = mailto;
-    }
+	
+	// On Click
 
 	onItemSelect = (company, event) => {
 		
 		company.selected = !company.selected;
 		this.setState({renderedAt: event.target.id})
     }
-
-	bcc() {
-		return this.state.companies.companies.filter(function(obj) {
-			return obj.active
-		}).map(function(obj) {
-			return obj.email
-		}).join(',');
+	
+	// Helper
+	
+	selectedCompanies() {
+		return this.state.companies.filter(function(company) {
+			return company.selected
+		}).map(function(company) {
+			return company.id
+		})
 	}
+
+	selectedEmailAdresses() {
+		return this.state.companies.filter(function(company) {
+			return company.selected
+		}).map(function(company) {
+			return company.email
+		})
+	}
+
+	// Company Rows
 
     rows = () => {
         var rows = [];
@@ -110,13 +149,19 @@ class Home extends Component {
         }, this);
         return rows;
     }
+	
+	// Render
 
 	render() {
    		return (
    			<div className="FormInfo">
+			{ this.state.showCompanies === false &&
 				<FormGroup className="Login" bsSize="large">
-					<HelpBlock className="DescriptionLabel">{this.state.texts.startDescription}</HelpBlock>
-				</FormGroup>
+					<HelpBlock className="DescriptionLabel">
+						{this.state.texts.startDescription}
+					</HelpBlock>
+				</FormGroup> }
+			{ this.state.showCompanies === false &&
 				<FormGroup className="EmailSearch" bsSize="large">
 					<FormGroup controlId="email" bsSize="large">
 						<ControlLabel> E-Mail </ControlLabel>
@@ -129,16 +174,38 @@ class Home extends Component {
 					<Button block onClick={	this.fetchCompanies } disabled={ !this.validateEmailLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Emails durchsuchen'} </Button>
 					<Button block onClick={	this.showCompanies } disabled={this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Manuell durchsuchen'} </Button>
 				</FormGroup>
-				{ this.state.showCompanies && 
-					<div className="CompanyList">
-						<FormGroup controlId="company" bsSize="large">
-							<ControlLabel>Companies</ControlLabel>
-                    		<ListGroup className="Company-List">
-                        		{this.rows()}
-                    		</ListGroup>
-						</FormGroup>
-					</div>
-				}
+			}
+			{ this.state.showCompanies && 
+				<div className="CompanyList">
+					<FormGroup controlId="company" bsSize="large">
+						<ControlLabel>Companies</ControlLabel>
+                   		<ListGroup className="Company-List">
+                       		{this.rows()}
+                   		</ListGroup>
+					</FormGroup>
+				</div>
+			}
+			{ this.state.showCompanies &&
+				<FormGroup className="Login" bsSize="large">
+					<HelpBlock className="DescriptionLabel">
+						{this.state.texts.proceedDescription}
+					</HelpBlock>
+				</FormGroup> 
+			}
+			{ this.state.showCompanies &&
+				<FormGroup className="EmailSearch" bsSize="large">
+					<FormGroup controlId="email" bsSize="large">
+						<ControlLabel> E-Mail </ControlLabel>
+						<FormControl className="EmailInput" type="text" value={this.state.email} onChange={this.handleChange} />
+					</FormGroup>
+					<FormGroup controlId="password" bsSize="large">
+						<ControlLabel> Passwort </ControlLabel>
+						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
+					</FormGroup>
+					<Button block onClick={	this.sendCompanies } disabled={ !this.validateEmailLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
+					<Button block onClick={	this.openEmailClient } disabled={this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
+				</FormGroup>
+			}
 			</div>
 		);
   	}
