@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { HelpBlock, Badge, Glyphicon, Image } from 'react-bootstrap';
 import './Home.css';
 
+import ApiManager from '../Api.js';
+
 import {
   	Button,
   	FormGroup,
@@ -20,7 +22,6 @@ class Home extends Component {
       		email: '',
 			password: '',
       		name: '',
-			forename: '',
 			isLoading: false,
 			showCompanies: false,
             companies: {},
@@ -41,22 +42,25 @@ class Home extends Component {
 	
 	validateLogin() {
 		
-		return this.validateEmail &&
+		return this.validateEmail() &&
 				this.state.password.length > 0
+	}
+	
+	validateSendMailRemote() {
+
+		return this.validateLogin() && this.state.name.length > 0
+	}
+	
+	validateSendMailLocal() {
+		
+		return this.validateEmail() && this.state.name.length > 0
 	}
 	
 	// Fetch Companies
 	
 	fetchCompanies = (event) => {
 		this.setState({isLoading: true})
-		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
-  			method: 'GET',
-  			headers: {
-    			'Content-Type': 'application/json',
-				'email': this.state.email,
-				'password': this.state.password,
-  			}})
-			.then((response) => response.json())
+		ApiManager.fetchCompanies(this.state.email, this.state.password)
 			.then((responseJson) => {
 				this.setState({showCompanies: true, companies: responseJson, isLoading: false})
 			});
@@ -64,10 +68,7 @@ class Home extends Component {
 	
 	showCompanies = (event) => {
 		this.setState({isLoading: true})
-		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
-  			method: 'GET'
-		})
-		.then((response) => response.json())
+		ApiManager.fetchCompanies('', '')
 		.then((responseJson) => {
 			this.setState({showCompanies: true, companies: responseJson, isLoading: false})
 		});
@@ -77,16 +78,7 @@ class Home extends Component {
 	
 	sendCompanies = (event) => {
 		this.setState({isLoading: true})
-		fetch('http://annoying34.konstantindeichmann.de:8080/companies', {
-  			method: 'POST',
-  			headers: {
-    			'Content-Type': 'application/json',
-				'email': this.state.email,
-				'password': this.state.password,
-  			},
-			body: JSON.stringify(this.selectedCompanies())
-		})
-		.then((response) => response.json())
+		ApiManager.sendCompanies(this.state.name, this.state.email, this.state.password, this.selectedCompanies())
 		.then((responseJson) => {
 			console.log(responseJson)
 			this.setState({isLoading: false})
@@ -94,8 +86,16 @@ class Home extends Component {
 	}
 	
 	openEmailClient = (event) => {
-		var mailto = `mailto:${this.state.email}?bcc=${encodeURIComponent(this.selectedEmailAdresses().join(','))}&subject=${encodeURIComponent("dummy Subject")}&body=${encodeURIComponent("dummy Text")}`;
+		this.setState({isLoading: true})
+		ApiManager.fetchEmailBody(this.name)
+		.then((body) => {
+			ApiManager.fetchEmailSubject()
+			.then((subject) => {
+				this.setState({isLoading: false})
+				var mailto = `mailto:${this.state.email}?bcc=${encodeURIComponent(this.selectedEmailAdresses().join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 		window.location.href = mailto;
+			});
+		});
 	}
 	
 	// Handle I/O Events
@@ -197,6 +197,10 @@ class Home extends Component {
 			}
 			{ this.state.showCompanies &&
 				<FormGroup className="EmailSearch" bsSize="large">
+					<FormGroup controlId="name" bsSize="large">
+						<ControlLabel> Name </ControlLabel>
+						<FormControl className="NameInput" type="text" value={this.state.name} onChange={this.handleChange} />
+					</FormGroup>
 					<FormGroup controlId="email" bsSize="large">
 						<ControlLabel> E-Mail* </ControlLabel>
 						<FormControl className="EmailInput" type="text" value={this.state.email} onChange={this.handleChange} />
@@ -205,8 +209,8 @@ class Home extends Component {
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-					<Button block onClick={	this.sendCompanies } disabled={ !this.validateLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
-					<Button block onClick={	this.openEmailClient } disabled={!this.validateEmail() || this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
+					<Button block onClick={	this.sendCompanies } disabled={ !this.validateSendMailRemote() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
+					<Button block onClick={	this.openEmailClient } disabled={!this.validateSendMailLocal() || this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
 				</FormGroup>
 			}
 			</div>
