@@ -31,15 +31,18 @@ class Home extends Component {
     	};
   	}
 	
-	// Validate Emails
+	// Validate forms
 	
-	validateEmailLogin() {
-		
+	validateEmail() {
 		var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		
-		return 	this.state.email.length > 0 &&
-				this.state.password.length > 0 &&
-                re.test(this.state.email)
+		return 	this.state.email.length > 0 && re.test(this.state.email)
+	}
+	
+	validateLogin() {
+		
+		return this.validateEmail &&
+				this.state.password.length > 0
 	}
 	
 	// Fetch Companies
@@ -171,7 +174,7 @@ class Home extends Component {
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-					<Button block onClick={	this.fetchCompanies } disabled={ !this.validateEmailLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Emails durchsuchen'} </Button>
+					<Button block onClick={	this.fetchCompanies } disabled={ !this.validateLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Emails durchsuchen'} </Button>
 					<Button block onClick={	this.showCompanies } disabled={this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Manuell durchsuchen'} </Button>
 				</FormGroup>
 			}
@@ -195,15 +198,15 @@ class Home extends Component {
 			{ this.state.showCompanies &&
 				<FormGroup className="EmailSearch" bsSize="large">
 					<FormGroup controlId="email" bsSize="large">
-						<ControlLabel> E-Mail </ControlLabel>
+						<ControlLabel> E-Mail* </ControlLabel>
 						<FormControl className="EmailInput" type="text" value={this.state.email} onChange={this.handleChange} />
 					</FormGroup>
 					<FormGroup controlId="password" bsSize="large">
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-					<Button block onClick={	this.sendCompanies } disabled={ !this.validateEmailLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
-					<Button block onClick={	this.openEmailClient } disabled={this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
+					<Button block onClick={	this.sendCompanies } disabled={ !this.validateLogin() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
+					<Button block onClick={	this.openEmailClient } disabled={!this.validateEmail() || this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
 				</FormGroup>
 			}
 			</div>
