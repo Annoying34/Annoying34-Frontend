@@ -26,8 +26,8 @@ class Home extends Component {
 			showCompanies: false,
             companies: {},
 			texts: {
-				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst diese dann durchsuchen.\nWenn wir für dich nach Firmen suchen sollen brauchen wir deine E-Mail Adresse und Passwort.\nWir werden dabei nur nach Metadaten in deinen Emails suchen, die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen Email Provider zu senden.",
-				proceedDescription: "Wenn du zu den ausgewählten Firmen eine Anfrage senden möchtest, können wir dies über den auf deinem Computer installierten E-Mail-Client tun. Oder wir senden die Emails direkt über deinen E-Mail Provider. In jedem Fall erhälst du nochmal eine Kopie des schreibens."
+				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen, die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst dann aus diesen auswählen.\nWenn wir für dich nach Firmen suchen sollen, brauchen wir deine E-Mailadresse und Passwort.\nWir werden dabei nur nach Metadaten in deinen E-Mails suchen. Die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen E-Mail-Provider zu senden.",
+				proceedDescription: "Wenn du zu den ausgewählten Firmen eine Anfrage senden möchtest, können wir dies über den auf deinem Computer installierten E-Mail-Client tun. Oder wir senden die E-Mails direkt über deinen E-Mail-Provider. In jedem Fall erhälst du nochmal eine Kopie des Schreibens."
 			}
     	};
   	}
