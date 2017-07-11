@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { HelpBlock, Badge, Glyphicon, Image } from 'react-bootstrap';
+import { HelpBlock, Badge, Glyphicon, Image, Modal } from 'react-bootstrap';
 import './Home.css';
 
 import ApiManager from '../Api.js';
@@ -24,11 +24,17 @@ class Home extends Component {
       		name: '',
 			isLoading: false,
 			showCompanies: false,
+			showSendDialog: false,
+			yourCompanies: {},
             companies: {},
 			texts: {
-				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen, die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst dann aus diesen auswählen.\nWenn wir für dich nach Firmen suchen sollen, brauchen wir deine E-Mailadresse und Passwort.\nWir werden dabei nur nach Metadaten in deinen E-Mails suchen. Die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen E-Mail-Provider zu senden.",
-				proceedDescription: "Wenn du zu den ausgewählten Firmen eine Anfrage senden möchtest, können wir dies über den auf deinem Computer installierten E-Mail-Client tun. Oder wir senden die E-Mails direkt über deinen E-Mail-Provider. In jedem Fall erhälst du nochmal eine Kopie des Schreibens."
-			}
+				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen, die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst dann aus diesen auswählen. Wenn wir für dich nach Firmen suchen sollen, brauchen wir deine E-Mailadresse und Passwort. Wir werden dabei nur nach Metadaten in deinen E-Mails suchen. Die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen E-Mail-Provider zu senden.",
+				proceedDescription: "Im Folgenden kannst du Firmen auswählen, welche du auffordern möchtest, dir Informationen über gespeicherte Daten zukommen zu lassen. Firmen die Ausgewählt hast werden mit einem Haken markiert. Um Fortfahren zu können musst du mindestens deinen namen und deine Email angeben."
+			},
+			dialogTitle: '',
+			dialogMessage: '',
+			dialogSend: 'Senden',
+			dialogCancel: 'Abbrechen',
     	};
   	}
 	
@@ -62,7 +68,15 @@ class Home extends Component {
 		this.setState({isLoading: true})
 		ApiManager.fetchCompanies(this.state.email, this.state.password)
 			.then((responseJson) => {
-				this.setState({showCompanies: true, companies: responseJson, isLoading: false})
+				var companies = responseJson.filter(function(company) {
+					return company.selected === false
+				})
+				
+				var yourCompanies = responseJson.filter(function(company) {
+					return company.selected === true
+				})
+
+				this.setState({showCompanies: true, companies: companies, yourCompanies: yourCompanies, isLoading: false})
 			});
 	}
 	
@@ -76,8 +90,23 @@ class Home extends Component {
 	
 	// Post Companies
 	
-	sendCompanies = (event) => {
+	showDialog = (event) => {
 		this.setState({isLoading: true})
+		ApiManager.fetchEmailBody(this.name)
+		.then((body) => {
+			ApiManager.fetchEmailSubject()
+			.then((subject) => {
+				this.setState({dialogTitle: subject, dialogMessage: body, showSendDialog: true})
+			})
+		})
+	}
+	
+	hideDialog = (event) => {
+		this.setState({showSendDialog:false})
+	}
+	
+	sendCompanies = (event) => {
+		this.setState({showSendDialog: false})
 		ApiManager.sendCompanies(this.state.name, this.state.email, this.state.password, this.selectedCompanies())
 		.then((responseJson) => {
 			console.log(responseJson)
@@ -93,7 +122,7 @@ class Home extends Component {
 			.then((subject) => {
 				this.setState({isLoading: false})
 				var mailto = `mailto:${this.state.email}?bcc=${encodeURIComponent(this.selectedEmailAdresses().join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-		window.location.href = mailto;
+				window.location.href = mailto;
 			});
 		});
 	}
@@ -121,7 +150,8 @@ class Home extends Component {
 	// Helper
 	
 	selectedCompanies() {
-		return this.state.companies.filter(function(company) {
+		var companies = this.state.yourCompanies.concat(this.state.companies)
+		return companies.filter(function(company) {
 			return company.selected
 		}).map(function(company) {
 			return company.id
@@ -136,11 +166,33 @@ class Home extends Component {
 		})
 	}
 
+	// Modal
+
+	modalDialog() {
+		return (
+		<div className="static-modal">
+			<Modal show={this.state.showSendDialog}>
+				<Modal.Header>
+        			<Modal.Title>{this.state.dialogTitle}</Modal.Title>
+      			</Modal.Header>
+
+				<Modal.Body><p>{this.state.dialogMessage}</p></Modal.Body>
+
+      			<Modal.Footer>
+					<Button onClick={this.hideDialog}>{this.state.dialogCancel}</Button>
+					<Button onClic={this.sendCompanies} bsStyle="primary">{this.state.dialogSend} (an {this.selectedCompanies.length} Firmen)</Button>
+      			</Modal.Footer>
+
+    		</Modal>
+		</div>
+		)
+	}
+
 	// Company Rows
 
-    rows = () => {
+    rows = (companies) => {
         var rows = [];
-        this.state.companies.forEach(function (company, i) {
+        companies.forEach(function (company, i) {
             rows.push(
                 <ListGroupItem 
 					key={i.toString()} 
@@ -178,16 +230,6 @@ class Home extends Component {
 					<Button block onClick={	this.showCompanies } disabled={this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Manuell durchsuchen'} </Button>
 				</FormGroup>
 			}
-			{ this.state.showCompanies && 
-				<div className="CompanyList">
-					<FormGroup controlId="company" bsSize="large">
-						<ControlLabel>Companies</ControlLabel>
-                   		<ListGroup className="Company-List">
-                       		{this.rows()}
-                   		</ListGroup>
-					</FormGroup>
-				</div>
-			}
 			{ this.state.showCompanies &&
 				<FormGroup className="Login" bsSize="large">
 					<HelpBlock className="DescriptionLabel">
@@ -195,10 +237,30 @@ class Home extends Component {
 					</HelpBlock>
 				</FormGroup> 
 			}
+			{ this.state.showCompanies && this.state.yourCompanies.length > 0 && 
+				<div className="YourCompanyList">
+					<FormGroup controlId="company" bsSize="large">
+						<ControlLabel>Gefundene Firmen</ControlLabel>
+                   		<ListGroup className="YourCompany-List">
+                       		{this.rows(this.state.yourCompanies)}
+                   		</ListGroup>
+					</FormGroup>
+				</div>
+			}
+			{ this.state.showCompanies && 
+				<div className="CompanyList">
+					<FormGroup controlId="company" bsSize="large">
+						<ControlLabel>Uns bekannte Firmen</ControlLabel>
+                   		<ListGroup className="Company-List">
+                       		{this.rows(this.state.companies)}
+                   		</ListGroup>
+					</FormGroup>
+				</div>
+			}
 			{ this.state.showCompanies &&
 				<FormGroup className="EmailSearch" bsSize="large">
 					<FormGroup controlId="name" bsSize="large">
-						<ControlLabel> Name </ControlLabel>
+						<ControlLabel> Name* </ControlLabel>
 						<FormControl className="NameInput" type="text" value={this.state.name} onChange={this.handleChange} />
 					</FormGroup>
 					<FormGroup controlId="email" bsSize="large">
@@ -209,10 +271,11 @@ class Home extends Component {
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-					<Button block onClick={	this.sendCompanies } disabled={ !this.validateSendMailRemote() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
+					<Button block onClick={	this.showDialog } disabled={ !this.validateSendMailRemote() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
 					<Button block onClick={	this.openEmailClient } disabled={!this.validateSendMailLocal() || this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
 				</FormGroup>
 			}
+			{this.modalDialog()}
 			</div>
 		);
   	}
