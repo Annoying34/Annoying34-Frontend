@@ -286,9 +286,11 @@ class Home extends Component {
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-			 		<HelpBlock className="DescriptionLabel">
-						Mit {this.state.numberSelectedCompanies} Firmen fortfahren
-					</HelpBlock>
+			 		<FormGroup controlId="NumberLabel" bsSize="large">
+			 			<HelpBlock className="NumberLabel">
+							Mit {this.state.numberSelectedCompanies} Firmen fortfahren
+						</HelpBlock>
+					</FormGroup>
 					<Button block onClick={	this.showDialog } disabled={ !this.validateSendMailRemote() || this.state.isLoading } bsSize="large" type="submit"> {(this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren')} </Button>
 					<Button block onClick={	this.openEmailClient } disabled={!this.validateSendMailLocal() || this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
 				</FormGroup>
