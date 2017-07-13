@@ -4,7 +4,7 @@ FROM node:boron
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-# Install app dependencies
+# Install app dependencies with npm
 COPY package.json /usr/src/app/
 RUN npm install
 
