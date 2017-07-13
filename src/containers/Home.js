@@ -101,7 +101,7 @@ class Home extends Component {
 	
 	showDialog = (event) => {
 		this.setState({isLoading: true})
-		ApiManager.fetchEmailBody(this.name)
+		ApiManager.fetchEmailBody(this.state.name)
 		.then((body) => {
 			ApiManager.fetchEmailSubject()
 			.then((subject) => {
@@ -126,7 +126,7 @@ class Home extends Component {
 	
 	openEmailClient = (event) => {
 		this.setState({isLoading: true})
-		ApiManager.fetchEmailBody(this.name)
+		ApiManager.fetchEmailBody(this.state.name)
 		.then((body) => {
 			ApiManager.fetchEmailSubject()
 			.then((subject) => {
