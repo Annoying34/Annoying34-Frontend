@@ -27,6 +27,7 @@ class Home extends Component {
 			showSendDialog: false,
 			yourCompanies: {},
             companies: {},
+			numberSelectedCompanies: 0,
 			texts: {
 				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen, die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst dann aus diesen auswählen. Wenn wir für dich nach Firmen suchen sollen, brauchen wir deine E-Mailadresse und Passwort. Wir werden dabei nur nach Metadaten in deinen E-Mails suchen. Die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen E-Mail-Provider zu senden.",
 				proceedDescription: "Im Folgenden kannst du Firmen auswählen, welche du auffordern möchtest, dir Informationen über gespeicherte Daten zukommen zu lassen. Firmen die Ausgewählt hast werden mit einem Haken markiert. Um Fortfahren zu können musst du mindestens deinen namen und deine Email angeben."
@@ -75,8 +76,12 @@ class Home extends Component {
 				var yourCompanies = responseJson.filter(function(company) {
 					return company.selected === true
 				})
+				
+				var numberSelectedCompanies = responseJson.reduce(function(acc, company) {
+					return acc + (company.selected ? 1 : 0)
+				}, 0)
 
-				this.setState({showCompanies: true, companies: companies, yourCompanies: yourCompanies, isLoading: false})
+				this.setState({showCompanies: true, companies: companies, yourCompanies: yourCompanies, isLoading: false, numberSelectedCompanies: numberSelectedCompanies})
 			});
 	}
 	
@@ -84,7 +89,11 @@ class Home extends Component {
 		this.setState({isLoading: true})
 		ApiManager.fetchCompanies('', '')
 		.then((responseJson) => {
-			this.setState({showCompanies: true, companies: responseJson, isLoading: false})
+			var numberSelectedCompanies = responseJson.reduce(function(acc, company) {
+				return acc + (company.selected ? 1 : 0)
+			}, 0)
+			
+			this.setState({showCompanies: true, companies: responseJson, isLoading: false, numberSelectedCompanies: numberSelectedCompanies})
 		});
 	}
 	
@@ -144,7 +153,12 @@ class Home extends Component {
 	onItemSelect = (company, event) => {
 		
 		company.selected = !company.selected;
-		this.setState({renderedAt: event.target.id})
+		
+		var numberSelectedCompanies = this.state.companies.concat(this.state.yourCompanies).reduce(function(acc, company) {
+			return acc + (company.selected ? 1 : 0)
+		}, 0)
+		
+		this.setState({renderedAt: event.target.id, numberSelectedCompanies: numberSelectedCompanies})
     }
 	
 	// Helper
@@ -180,9 +194,10 @@ class Home extends Component {
 
       			<Modal.Footer>
 					<Button onClick={this.hideDialog}>{this.state.dialogCancel}</Button>
-					<Button onClic={this.sendCompanies} bsStyle="primary">{this.state.dialogSend} (an {this.selectedCompanies.length} Firmen)</Button>
+					<Button onClic={this.sendCompanies} bsStyle="primary">
+						{this.state.dialogSend}
+					</Button>
       			</Modal.Footer>
-
     		</Modal>
 		</div>
 		)
@@ -271,7 +286,10 @@ class Home extends Component {
 						<ControlLabel> Passwort </ControlLabel>
 						<FormControl className="PasswordInput" type="password" value={this.state.password} onChange={this.handleChange} />
 					</FormGroup>
-					<Button block onClick={	this.showDialog } disabled={ !this.validateSendMailRemote() || this.state.isLoading } bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren'} </Button>
+			 		<HelpBlock className="DescriptionLabel">
+						Mit {this.state.numberSelectedCompanies} Firmen fortfahren
+					</HelpBlock>
+					<Button block onClick={	this.showDialog } disabled={ !this.validateSendMailRemote() || this.state.isLoading } bsSize="large" type="submit"> {(this.state.isLoading ? 'Lädt ...' : 'Mit Login fortfahren')} </Button>
 					<Button block onClick={	this.openEmailClient } disabled={!this.validateSendMailLocal() || this.state.isLoading} bsSize="large" type="submit"> {this.state.isLoading ? 'Lädt ...' : 'E-Mail-Client öffnen'} </Button>
 				</FormGroup>
 			}
