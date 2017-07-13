@@ -25,8 +25,8 @@ class Home extends Component {
 			isLoading: false,
 			showCompanies: false,
 			showSendDialog: false,
-			yourCompanies: {},
-            companies: {},
+			yourCompanies: [],
+            companies: [],
 			numberSelectedCompanies: 0,
 			texts: {
 				startDescription: "Du kannst entweder aus einer Liste von Firmen diejenigen auswählen, die du anschreiben möchtest. Oder wir suchen in deinen E-Mails nach Firmen und du kannst dann aus diesen auswählen. Wenn wir für dich nach Firmen suchen sollen, brauchen wir deine E-Mailadresse und Passwort. Wir werden dabei nur nach Metadaten in deinen E-Mails suchen. Die Nachrichten und Anhänge sehen wir dabei nicht.\nZusätzlich ist es dann möglich eine E-Mail direkt über deinen E-Mail-Provider zu senden.",
@@ -105,7 +105,7 @@ class Home extends Component {
 		.then((body) => {
 			ApiManager.fetchEmailSubject()
 			.then((subject) => {
-				this.setState({dialogTitle: subject, dialogMessage: body, showSendDialog: true})
+				this.setState({dialogTitle: subject, dialogMessage: body, showSendDialog: true, isLoading: false})
 			})
 		})
 	}
@@ -115,8 +115,9 @@ class Home extends Component {
 	}
 	
 	sendCompanies = (event) => {
-		this.setState({showSendDialog: false})
-		ApiManager.sendCompanies(this.state.name, this.state.email, this.state.password, this.selectedCompanies())
+		this.setState({showSendDialog: false, isLoading: true})
+		var companies = this.selectedCompanies()
+		ApiManager.sendCompanies(this.state.name, this.state.email, this.state.password, companies)
 		.then((responseJson) => {
 			console.log(responseJson)
 			this.setState({isLoading: false})
@@ -164,8 +165,7 @@ class Home extends Component {
 	// Helper
 	
 	selectedCompanies() {
-		var companies = this.state.yourCompanies.concat(this.state.companies)
-		return companies.filter(function(company) {
+		return this.state.yourCompanies.concat(this.state.companies).filter(function(company) {
 			return company.selected
 		}).map(function(company) {
 			return company.id
@@ -173,7 +173,7 @@ class Home extends Component {
 	}
 
 	selectedEmailAdresses() {
-		return this.state.companies.filter(function(company) {
+		return this.state.yourCompanies.concat(this.state.companies).filter(function(company) {
 			return company.selected
 		}).map(function(company) {
 			return company.email
@@ -194,7 +194,7 @@ class Home extends Component {
 
       			<Modal.Footer>
 					<Button onClick={this.hideDialog}>{this.state.dialogCancel}</Button>
-					<Button onClic={this.sendCompanies} bsStyle="primary">
+					<Button onClick={this.sendCompanies} bsStyle="primary">
 						{this.state.dialogSend}
 					</Button>
       			</Modal.Footer>
